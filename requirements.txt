@@ -1,0 +1,11 @@
+functions-framework == 3.*
+torch == 2.2.2
+torchvision == 0.17.2
+torchaudio == 2.2.2
+
+torch-geometric  # 安装 PyTorch Geometric 及其所有依赖
+
+pandas
+numpy
+protobuf==3.20.*  # 指定 protobuf 版本
+google-cloud-storage
