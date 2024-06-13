@@ -5,24 +5,7 @@ import functions_framework
 import pandas as pd
 import numpy as np
 import torch
-from google.cloud import storage
-
-@functions_framework.http
-def DRAGON_function(request):
-    """
-    Cloud Functions 處理函式
-
-    Args:
-        request: HTTP 請求物件，包含參數 user_ID
-
-    Returns:
-        JSON 格式的預測結果
-    """
-
-    import functions_framework
-
-import pandas as pd
-import torch
+import logging
 from google.cloud import storage
 
 @functions_framework.http
@@ -44,26 +27,41 @@ def DRAGON_function(request):
     else:
         return 'Error: Missing user_ID parameter', 400  # 返回錯誤訊息
     
-    """
+    
     # 從 GCS 載入模型
     storage_client = storage.Client()
     bucket_name = 'rec-modal'
-    source_blob_name = 'active_modal/dragon_mg_outfit.pt'
-    destination_file_name = '/tmp/dragon_mg_outfit.pt'  # 儲存到 Cloud Functions 的暫存空間
+    source_blob_name = 'active_modal/dragon_interupt.pt'
+    destination_file_name = '/tmp/dragon_interupt.pt'  # 儲存到 Cloud Functions 的暫存空間
 
     try:
         bucket = storage_client.bucket(bucket_name)
         blob = bucket.blob(source_blob_name)
         blob.download_to_filename(destination_file_name)
+    except FileNotFoundError:
+        logging.error(f'Model file not found: {source_blob_name}')
+        return 'Error: Model file not found', 500
     except Exception as e:
-        return f'Error downloading model: {e}', 500  # 返回錯誤訊息
-    """
+        logging.error(f'Error downloading model: {e}')
+        return f'Error downloading model: {e}', 500
     
+    try:
+        with torch.no_grad():
+            model = torch.load(destination_file_name)  # 使用正確的檔案路徑
+    except FileNotFoundError:
+        logging.error(f'Model file not found after downloading: {destination_file_name}')
+        return 'Error: Model file not found', 500
+    except Exception as e:
+        logging.error(f'Error loading model: {e}')
+        return f'Error loading model: {e}', 500
+    """
+    保留舊的
     try:
         model = torch.load('dragon_interupt.pt')
         #model = torch.load(destination_file_name)
     except Exception as e:
         return f'Error loading model: {e}', 500  # 返回錯誤訊息
+    """
 
     # 進行預測
     try:
